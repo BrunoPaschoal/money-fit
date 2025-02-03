@@ -132,7 +132,7 @@ export default function ParticipantCard({
                     </div>
 
                     <div className="text-sm text-gray-400 text-right">
-                        Valor Contribuído: <span className="font-bold text-gray-100">R$ {moneyAdded.toFixed(2)}</span>
+                        Valor Contribuído: <span className="font-bold text-emerald-500">R$ {moneyAdded.toFixed(2)}</span>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-2">

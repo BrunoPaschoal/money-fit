@@ -175,7 +175,7 @@ export default function Home() {
                 </div>
                 <div className="bg-purple-900/50 backdrop-blur-sm rounded-lg px-6 py-3">
                   <p className="text-purple-200 text-sm font-medium">Prêmio Atual</p>
-                  <p className="text-2xl font-bold text-purple-300">
+                  <p className="text-2xl font-bold text-white">
                     R$ {participants.reduce((total, p) => total + p.moneyAdded, 0).toFixed(2)}
                   </p>
                 </div>
