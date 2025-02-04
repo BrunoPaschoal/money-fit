@@ -19,11 +19,26 @@ export async function PATCH(
     const { newWeight, initialWeight, weightGoal, moneyToAdd, reset } = body;
 
     if (reset) {
+      // Primeiro deletar todos os registros relacionados
+      await prisma.weightRecord.deleteMany({
+        where: { participantId: id }
+      });
+      
+      await prisma.moneyRecord.deleteMany({
+        where: { participantId: id }
+      });
+
+      // Depois resetar os valores do participante
       const updatedParticipant = await prisma.participant.update({
         where: { id },
         data: {
-          weightLost: 0,
+          initialWeight: 0,
+          weightGoal: 0,
           moneyAdded: 0
+        },
+        include: {
+          weightHistory: true,
+          moneyHistory: true
         }
       });
 

@@ -84,13 +84,7 @@ export default function Home() {
       });
 
       if (response.ok) {
-        setParticipants(prevParticipants =>
-          prevParticipants.map(participant =>
-            participant.id === id
-              ? { ...participant, weightHistory: [], moneyAdded: 0 }
-              : participant
-          )
-        );
+        fetchParticipants();
       }
     } catch (error) {
       console.error('Erro ao resetar participante:', error);
