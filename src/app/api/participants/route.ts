@@ -18,7 +18,7 @@ export async function GET() {
       }
     });
     return NextResponse.json(participants);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Erro ao buscar participantes' }, { status: 500 });
   }
 } 

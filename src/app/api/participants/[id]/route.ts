@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function PATCH(
   request: NextRequest,
-  _context: { params: { id: string } }
+  { params: { id: idFromParams } }: { params: { id: string } }
 ) {
   try {
     // Extrair o ID da URL
@@ -137,9 +137,4 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
-
-export async function GET(request: Request) {
-  // remova o _context se não estiver usando
-  // ... existing code ...
 } 
