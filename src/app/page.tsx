@@ -8,24 +8,32 @@ interface Participant {
   name: string;
   photoUrl: string;
   weightGoal: number;
-  weightLost: number;
   color: string;
   initialWeight: number;
   moneyAdded: number;
+  weightHistory: Array<{ weight: number; recordedAt: string }>;
+  moneyHistory: Array<{ amount: number; recordedAt: string }>;
 }
 
 export default function Home() {
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchParticipants();
   }, []);
 
   const fetchParticipants = async () => {
-    const response = await fetch('/api/participants');
-    const data = await response.json();
-    setParticipants(data);
-    console.log(data)
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/participants');
+      const data = await response.json();
+      setParticipants(data);
+    } catch (error) {
+      console.error('Erro ao buscar participantes:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleWeightUpdate = async (id: number, newWeight: number) => {
@@ -39,13 +47,7 @@ export default function Home() {
       });
 
       if (response.ok) {
-        setParticipants(prevParticipants =>
-          prevParticipants.map(participant =>
-            participant.id === id
-              ? { ...participant, weightLost: participant.weightLost + newWeight }
-              : participant
-          )
-        );
+        fetchParticipants();
       }
     } catch (error) {
       console.error('Erro ao atualizar peso:', error);
@@ -63,13 +65,7 @@ export default function Home() {
       });
 
       if (response.ok) {
-        setParticipants(prevParticipants =>
-          prevParticipants.map(participant =>
-            participant.id === id
-              ? { ...participant, moneyAdded: participant.moneyAdded + amount }
-              : participant
-          )
-        );
+        fetchParticipants();
       }
     } catch (error) {
       console.error('Erro ao adicionar dinheiro:', error);
@@ -90,7 +86,7 @@ export default function Home() {
         setParticipants(prevParticipants =>
           prevParticipants.map(participant =>
             participant.id === id
-              ? { ...participant, weightLost: 0, moneyAdded: 0 }
+              ? { ...participant, weightHistory: [], moneyAdded: 0 }
               : participant
           )
         );
@@ -123,17 +119,28 @@ export default function Home() {
               {participants.length > 0 && (
                 <div className="mt-8 mb-6">
                   {(() => {
-                    const participantsWithProgress = participants.filter(p => p.weightGoal > 0 && p.weightLost > 0);
+                    const participantsWithProgress = participants.filter(p => p.weightGoal > 0 && p.weightHistory.length > 0);
 
                     if (participantsWithProgress.length === 0) return null;
 
                     const leader = participantsWithProgress.reduce((prev, current) => {
-                      const prevProgress = (prev.weightLost / prev.weightGoal) * 100;
-                      const currentProgress = (current.weightLost / current.weightGoal) * 100;
+                      const prevCurrentWeight = prev.weightHistory[0]?.weight ?? prev.initialWeight;
+                      const currentCurrentWeight = current.weightHistory[0]?.weight ?? current.initialWeight;
+
+                      const prevProgress = prev.weightGoal > 0
+                        ? Math.min(100, Math.max(0, ((prev.initialWeight - prevCurrentWeight) / (prev.initialWeight - prev.weightGoal)) * 100))
+                        : -1;
+                      const currentProgress = current.weightGoal > 0
+                        ? Math.min(100, Math.max(0, ((current.initialWeight - currentCurrentWeight) / (current.initialWeight - current.weightGoal)) * 100))
+                        : -1;
+
                       return currentProgress > prevProgress ? current : prev;
                     }, participantsWithProgress[0]);
 
-                    const leaderProgress = (leader.weightLost / leader.weightGoal) * 100;
+                    const leaderCurrentWeight = leader.weightHistory[0]?.weight ?? leader.initialWeight;
+                    const leaderProgress = leader.weightGoal > 0
+                      ? Math.min(100, Math.max(0, ((leader.initialWeight - leaderCurrentWeight) / (leader.initialWeight - leader.weightGoal)) * 100))
+                      : 0;
 
                     return (
                       <div className="inline-flex items-center gap-3 bg-purple-900/30 backdrop-blur-sm rounded-full px-6 py-2">
@@ -190,8 +197,16 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[...participants]
             .sort((a, b) => {
-              const progressA = a.weightGoal > 0 ? (a.weightLost / a.weightGoal) * 100 : -1;
-              const progressB = b.weightGoal > 0 ? (b.weightLost / b.weightGoal) * 100 : -1;
+              const currentWeightA = a.weightHistory[0]?.weight ?? a.initialWeight;
+              const currentWeightB = b.weightHistory[0]?.weight ?? b.initialWeight;
+
+              const progressA = a.weightGoal > 0
+                ? Math.min(100, Math.max(0, ((a.initialWeight - currentWeightA) / (a.initialWeight - a.weightGoal)) * 100))
+                : -1;
+              const progressB = b.weightGoal > 0
+                ? Math.min(100, Math.max(0, ((b.initialWeight - currentWeightB) / (b.initialWeight - b.weightGoal)) * 100))
+                : -1;
+
               return progressB - progressA;
             })
             .map((participant) => (

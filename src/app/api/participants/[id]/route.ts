@@ -33,32 +33,43 @@ export async function PATCH(
     }
 
     if (initialWeight !== undefined && weightGoal !== undefined) {
-      const updatedParticipant = await prisma.participant.update({
+      // Ao editar pela primeira vez, criar primeiro registro de peso
+      const participant = await prisma.participant.update({
         where: { id },
         data: {
           initialWeight,
           weightGoal,
+          weightHistory: {
+            create: {
+              weight: initialWeight
+            }
+          }
+        },
+        include: {
+          weightHistory: true
         }
       });
-      return NextResponse.json(updatedParticipant);
+
+      return NextResponse.json(participant);
     }
 
     if (newWeight !== undefined) {
-      const participant = await prisma.participant.findUnique({
-        where: { id }
+      await prisma.weightRecord.create({
+        data: {
+          weight: newWeight,
+          participantId: id
+        }
       });
 
-      if (!participant) {
-        return NextResponse.json(
-          { error: 'Participante não encontrado' },
-          { status: 404 }
-        );
-      }
-
-      const updatedParticipant = await prisma.participant.update({
+      // Buscar participante atualizado com todo o histórico
+      const updatedParticipant = await prisma.participant.findUnique({
         where: { id },
-        data: {
-          weightLost: participant.weightLost + newWeight
+        include: {
+          weightHistory: {
+            orderBy: {
+              recordedAt: 'desc'
+            }
+          }
         }
       });
 
@@ -66,6 +77,14 @@ export async function PATCH(
     }
 
     if (moneyToAdd !== undefined) {
+      // Criar novo registro de contribuição
+      await prisma.moneyRecord.create({
+        data: {
+          amount: moneyToAdd,
+          participantId: id
+        }
+      });
+
       const participant = await prisma.participant.findUnique({
         where: { id }
       });
@@ -81,6 +100,13 @@ export async function PATCH(
         where: { id },
         data: {
           moneyAdded: participant.moneyAdded + moneyToAdd
+        },
+        include: {
+          moneyHistory: {
+            orderBy: {
+              recordedAt: 'desc'
+            }
+          }
         }
       });
 

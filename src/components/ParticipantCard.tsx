@@ -5,6 +5,8 @@ import Image from 'next/image';
 import EditParticipantModal from './EditParticipantModal';
 import AddMoneyModal from './AddMoneyModal';
 import ResetConfirmationModal from './ResetConfirmationModal';
+import ParticipantInfoModal from './ParticipantInfoModal';
+import toast from 'react-hot-toast';
 
 interface ParticipantCardProps {
     id: number;
@@ -13,8 +15,9 @@ interface ParticipantCardProps {
     color: string;
     initialWeight: number;
     weightGoal: number;
-    weightLost: number;
     moneyAdded: number;
+    weightHistory: Array<{ weight: number; recordedAt: string }>;
+    moneyHistory: Array<{ amount: number; recordedAt: string }>;
     onWeightUpdate: (id: number, newWeight: number) => void;
     onParticipantEdit: (id: number, initialWeight: number, weightGoal: number) => Promise<void>;
     onMoneyAdd: (id: number, amount: number) => Promise<void>;
@@ -28,8 +31,9 @@ export default function ParticipantCard({
     color,
     initialWeight,
     weightGoal,
-    weightLost,
     moneyAdded,
+    weightHistory,
+    moneyHistory,
     onWeightUpdate,
     onParticipantEdit,
     onMoneyAdd,
@@ -39,15 +43,41 @@ export default function ParticipantCard({
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isMoneyModalOpen, setIsMoneyModalOpen] = useState(false);
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-    const progress = weightGoal > 0 ? (weightLost / weightGoal) * 100 : 0;
-    const currentWeight = initialWeight - weightLost;
+    const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    // Pegar o último peso registrado ou usar o peso inicial
+    const currentWeight = weightHistory?.[0]?.weight ?? initialWeight;
+
+    // Calcular progresso baseado na diferença entre peso atual e meta
+    const progress = weightGoal > 0 && currentWeight > 0
+        ? Math.max(0, Math.min(100, ((initialWeight - currentWeight) / (initialWeight - weightGoal)) * 100))
+        : 0;
+
     const isDataComplete = initialWeight > 0 && weightGoal > 0;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (newWeight) {
-            onWeightUpdate(id, parseFloat(newWeight));
-            setNewWeight('');
+        if (newWeight && !isSubmitting) {
+            setIsSubmitting(true);
+            try {
+                await onWeightUpdate(id, parseFloat(newWeight));
+                setNewWeight('');
+                toast.success('Peso registrado com sucesso!', {
+                    style: {
+                        background: '#1F2937',
+                        color: '#fff',
+                        border: '1px solid #374151'
+                    },
+                    iconTheme: {
+                        primary: '#10B981',
+                        secondary: '#fff'
+                    }
+                });
+            } finally {
+                setIsSubmitting(false);
+            }
         }
     };
 
@@ -69,7 +99,7 @@ export default function ParticipantCard({
                         <div className="flex-1">
                             <h3 className="text-xl font-bold text-gray-100 mb-2">{name}</h3>
                             <div className="flex gap-2">
-                                {(weightLost > 0 || moneyAdded > 0) && (
+                                {(weightHistory.length > 0 || moneyAdded > 0) && (
                                     <button
                                         onClick={() => setIsResetModalOpen(true)}
                                         className="p-2 text-gray-400 hover:text-red-400 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
@@ -93,6 +123,14 @@ export default function ParticipantCard({
                                 >
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                                <button
+                                    onClick={() => setIsInfoModalOpen(true)}
+                                    className="p-2 text-gray-400 hover:text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </button>
                             </div>
@@ -142,17 +180,24 @@ export default function ParticipantCard({
                                 step="0.1"
                                 value={newWeight}
                                 onChange={(e) => setNewWeight(e.target.value)}
-                                placeholder="Digite seu progresso"
+                                placeholder="Digite seu peso atual"
                                 disabled={!isDataComplete}
                                 className={`flex-1 min-w-0 px-4 py-3 text-sm text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent ${!isDataComplete ? 'bg-gray-800 cursor-not-allowed' : ''}`}
                             />
                             <button
                                 type="submit"
-                                disabled={!isDataComplete}
-                                className={`px-6 py-3 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${!isDataComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!isDataComplete || isSubmitting}
+                                className={`px-6 py-3 text-sm font-medium rounded-lg transition-colors whitespace-nowrap w-[100px] ${!isDataComplete || isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 style={{ backgroundColor: color }}
                             >
-                                Adicionar
+                                {isSubmitting ? (
+                                    <svg className="animate-spin h-4 w-4 text-white mx-auto" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                ) : (
+                                    'Registrar'
+                                )}
                             </button>
                         </div>
                         {!isDataComplete && (
@@ -160,7 +205,7 @@ export default function ParticipantCard({
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7a4 4 0 00-8 0v4" />
                                 </svg>
-                                Cadastre seus dados para preencher seu progresso
+                                Cadastre seus dados para registrar seu peso
                             </p>
                         )}
                     </form>
@@ -186,6 +231,22 @@ export default function ParticipantCard({
                 onClose={() => setIsResetModalOpen(false)}
                 participant={{ id, name }}
                 onConfirm={onReset}
+            />
+
+            <ParticipantInfoModal
+                isOpen={isInfoModalOpen}
+                onClose={() => setIsInfoModalOpen(false)}
+                participant={{
+                    id,
+                    name,
+                    photoUrl,
+                    color,
+                    initialWeight,
+                    weightGoal,
+                    weightHistory,
+                    moneyAdded,
+                    moneyHistory
+                }}
             />
         </>
     );

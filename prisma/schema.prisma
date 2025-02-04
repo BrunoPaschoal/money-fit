@@ -8,14 +8,32 @@ datasource db {
 }
 
 model Participant {
-  id           Int      @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   name         String
   photoUrl     String
-  color        String   @default("#4F46E5")
-  initialWeight Float   @default(0)
-  weightGoal   Float    @default(0)
-  weightLost   Float    @default(0)
-  moneyAdded   Float    @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  color        String        @default("#7C3AED")
+  initialWeight Float        @default(0)
+  weightGoal   Float        @default(0)
+  weightLost   Float        @default(0)
+  moneyAdded   Float        @default(0)
+  weightHistory WeightRecord[]
+  moneyHistory MoneyRecord[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model WeightRecord {
+  id            Int         @id @default(autoincrement())
+  weight        Float
+  recordedAt    DateTime    @default(now())
+  participant   Participant @relation(fields: [participantId], references: [id])
+  participantId Int
+}
+
+model MoneyRecord {
+  id            Int         @id @default(autoincrement())
+  amount        Float
+  recordedAt    DateTime    @default(now())
+  participant   Participant @relation(fields: [participantId], references: [id])
+  participantId Int
 } 

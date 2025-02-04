@@ -13,6 +13,8 @@ const colors = [
 
 async function main() {
   // Limpa o banco de dados antes de adicionar novos dados
+  await prisma.weightRecord.deleteMany({})
+  await prisma.moneyRecord.deleteMany({})
   await prisma.participant.deleteMany({})
 
   const participants = [
