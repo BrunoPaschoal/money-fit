@@ -115,28 +115,33 @@ export default function Home() {
               {!isInitialLoading && participants.length > 0 && (
                 <div className="mt-8 mb-6">
                   {(() => {
-                    const participantsWithProgress = participants.filter(p => p.weightGoal > 0 && p.weightHistory.length > 0);
+                    // Filtra participantes que têm meta definida e pelo menos um registro de peso
+                    const participantsWithProgress = participants.filter(p => {
+                      if (!p.weightGoal || !p.weightHistory.length) return false;
 
+                      const currentWeight = p.weightHistory[0]?.weight ?? p.initialWeight;
+                      const progress = ((p.initialWeight - currentWeight) / (p.initialWeight - p.weightGoal)) * 100;
+
+                      // Inclui apenas participantes com progresso maior que 0
+                      return progress > 0;
+                    });
+
+                    // Se ninguém tem progresso, não mostra o líder
                     if (participantsWithProgress.length === 0) return null;
 
+                    // Encontra o líder entre os participantes com progresso
                     const leader = participantsWithProgress.reduce((prev, current) => {
                       const prevCurrentWeight = prev.weightHistory[0]?.weight ?? prev.initialWeight;
                       const currentCurrentWeight = current.weightHistory[0]?.weight ?? current.initialWeight;
 
-                      const prevProgress = prev.weightGoal > 0
-                        ? Math.min(100, Math.max(0, ((prev.initialWeight - prevCurrentWeight) / (prev.initialWeight - prev.weightGoal)) * 100))
-                        : -1;
-                      const currentProgress = current.weightGoal > 0
-                        ? Math.min(100, Math.max(0, ((current.initialWeight - currentCurrentWeight) / (current.initialWeight - current.weightGoal)) * 100))
-                        : -1;
+                      const prevProgress = ((prev.initialWeight - prevCurrentWeight) / (prev.initialWeight - prev.weightGoal)) * 100;
+                      const currentProgress = ((current.initialWeight - currentCurrentWeight) / (current.initialWeight - current.weightGoal)) * 100;
 
                       return currentProgress > prevProgress ? current : prev;
-                    }, participantsWithProgress[0]);
+                    });
 
                     const leaderCurrentWeight = leader.weightHistory[0]?.weight ?? leader.initialWeight;
-                    const leaderProgress = leader.weightGoal > 0
-                      ? Math.min(100, Math.max(0, ((leader.initialWeight - leaderCurrentWeight) / (leader.initialWeight - leader.weightGoal)) * 100))
-                      : 0;
+                    const leaderProgress = ((leader.initialWeight - leaderCurrentWeight) / (leader.initialWeight - leader.weightGoal)) * 100;
 
                     return (
                       <div className="inline-flex items-center gap-3 bg-purple-900/30 backdrop-blur-sm rounded-full px-6 py-2">

@@ -176,15 +176,20 @@ export default function ParticipantCard({
 
                     <form onSubmit={handleSubmit} className="space-y-2">
                         <div className="flex gap-2">
-                            <input
-                                type="number"
-                                step="0.1"
-                                value={newWeight}
-                                onChange={(e) => setNewWeight(e.target.value)}
-                                placeholder="Digite seu peso atual"
-                                disabled={!isDataComplete}
-                                className={`flex-1 min-w-0 px-4 py-3 text-sm text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent ${!isDataComplete ? 'bg-gray-800 cursor-not-allowed' : ''}`}
-                            />
+                            <div className="relative flex-1">
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    value={newWeight}
+                                    onChange={(e) => setNewWeight(e.target.value)}
+                                    placeholder="Digite seu peso atual"
+                                    disabled={!isDataComplete || isSubmitting}
+                                    className={`w-full px-4 pr-12 py-3 text-sm text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${!isDataComplete ? 'bg-gray-800 cursor-not-allowed' : ''}`}
+                                />
+                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span className="text-gray-400">kg</span>
+                                </div>
+                            </div>
                             <button
                                 type="submit"
                                 disabled={!isDataComplete || isSubmitting}

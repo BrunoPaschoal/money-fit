@@ -176,31 +176,57 @@ export default function ParticipantInfoModal({ isOpen, onClose, participant }: P
         }
     };
 
+    const progress = ((sortedHistory[sortedHistory.length - 1].weight - participant.initialWeight) / (participant.weightGoal - participant.initialWeight)) * 100;
+
     return (
         <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
             <div className="bg-gray-800 rounded-xl w-full max-w-4xl flex flex-col h-[90vh]">
                 {/* Header - Fixo */}
-                <div className="p-6 border-b border-gray-700">
-                    <div className="flex items-center gap-4">
-                        <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-white flex-shrink-0">
-                            <Image
-                                src={participant.photoUrl}
-                                alt={participant.name}
-                                width={80}
-                                height={80}
-                                className="object-cover w-full h-full"
-                            />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-bold text-white">{participant.name}</h2>
-                            <div className="flex gap-4 mt-2 text-purple-200">
-                                <div>
-                                    <span className="text-sm">Peso Inicial:</span>
-                                    <span className="ml-1 font-semibold">{participant.initialWeight}kg</span>
+                <div className="bg-gradient-to-r from-indigo-950 via-purple-800 to-fuchsia-600 rounded-t-xl">
+                    <div className="p-4">
+                        <div className="flex items-center gap-4">
+                            {/* Avatar */}
+                            <div className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-white/20 shadow-lg flex-shrink-0">
+                                <Image
+                                    src={participant.photoUrl}
+                                    alt={participant.name}
+                                    width={64}
+                                    height={64}
+                                    className="object-cover w-full h-full"
+                                />
+                            </div>
+
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                                <h2 className="text-xl font-bold text-white mb-1 truncate">{participant.name}</h2>
+
+                                <div className="flex items-center gap-4 text-sm">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-purple-200">Inicial:</span>
+                                        <span className="font-semibold text-white">{participant.initialWeight}kg</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-purple-200">Atual:</span>
+                                        <span className="font-semibold text-white">
+                                            {participant.weightHistory[0]?.weight || participant.initialWeight}kg
+                                        </span>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span className="text-sm">Meta:</span>
-                                    <span className="ml-1 font-semibold">{participant.weightGoal}kg</span>
+
+                                {/* Progress Bar */}
+                                <div className="mt-2 flex items-center gap-2">
+                                    <div className="flex-1 bg-black/30 rounded-full h-1.5">
+                                        <div
+                                            className="h-1.5 rounded-full transition-all duration-500"
+                                            style={{
+                                                width: `${Math.min(progress, 100)}%`,
+                                                backgroundColor: participant.color
+                                            }}
+                                        />
+                                    </div>
+                                    <span className="text-xs font-medium text-purple-200">
+                                        {progress.toFixed(1)}%
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -208,8 +234,8 @@ export default function ParticipantInfoModal({ isOpen, onClose, participant }: P
                 </div>
 
                 {/* Tabs - Fixo */}
-                <div className="border-b border-gray-700">
-                    <div className="px-6 flex space-x-8">
+                <div className="border-b border-gray-700 overflow-x-auto">
+                    <div className="px-6 flex space-x-8 min-w-max">
                         <TabButton active={activeTab === 'table'} onClick={() => setActiveTab('table')}>
                             Histórico
                         </TabButton>
