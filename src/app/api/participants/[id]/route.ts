@@ -137,4 +137,9 @@ export async function PATCH(
       { status: 500 }
     );
   }
+}
+
+export async function GET(request: Request) {
+  // remova o _context se não estiver usando
+  // ... existing code ...
 } 
