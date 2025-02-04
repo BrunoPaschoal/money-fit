@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import ParticipantCard from '@/components/ParticipantCard';
 import ParticipantCardSkeleton from '@/components/ParticipantCardSkeleton';
+import Image from 'next/image';
 
 interface Participant {
   id: number;
@@ -140,9 +141,11 @@ export default function Home() {
                     return (
                       <div className="inline-flex items-center gap-3 bg-purple-900/30 backdrop-blur-sm rounded-full px-6 py-2">
                         <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-purple-300">
-                          <img
+                          <Image
                             src={leader.photoUrl}
                             alt={leader.name}
+                            width={48}
+                            height={48}
                             className="object-cover w-full h-full"
                           />
                         </div>

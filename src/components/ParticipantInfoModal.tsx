@@ -12,6 +12,7 @@ import {
     Tooltip,
     Legend
 } from 'chart.js';
+import Image from 'next/image';
 
 ChartJS.register(
     CategoryScale,
@@ -129,14 +130,6 @@ const MoneyHistoryTable = ({ history }: { history: Array<{ amount: number; recor
 
 export default function ParticipantInfoModal({ isOpen, onClose, participant }: ParticipantInfoModalProps) {
     const [activeTab, setActiveTab] = useState<'table' | 'chart' | 'money'>('table');
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        if (isOpen) {
-            setIsLoading(true);
-            setTimeout(() => setIsLoading(false), 500);
-        }
-    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -190,9 +183,11 @@ export default function ParticipantInfoModal({ isOpen, onClose, participant }: P
                 <div className="p-6 border-b border-gray-700">
                     <div className="flex items-center gap-4">
                         <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-white flex-shrink-0">
-                            <img
+                            <Image
                                 src={participant.photoUrl}
                                 alt={participant.name}
+                                width={80}
+                                height={80}
                                 className="object-cover w-full h-full"
                             />
                         </div>

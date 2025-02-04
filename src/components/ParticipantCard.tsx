@@ -45,7 +45,6 @@ export default function ParticipantCard({
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isUpdating, setIsUpdating] = useState(false);
 
     // Pegar o último peso registrado ou usar o peso inicial
     const currentWeight = weightHistory?.[0]?.weight ?? initialWeight;
@@ -88,9 +87,11 @@ export default function ParticipantCard({
                     <div className="flex gap-4 items-start">
                         <div className="flex-shrink-0">
                             <div className={`relative w-20 h-20 rounded-full overflow-hidden border-4`} style={{ borderColor: color }}>
-                                <img
+                                <Image
                                     src={photoUrl}
                                     alt={name}
+                                    width={80}
+                                    height={80}
                                     className="object-cover w-full h-full"
                                 />
                             </div>
