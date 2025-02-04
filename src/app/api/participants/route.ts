@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma';
-import { NextResponse } from 'next/server';
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
@@ -7,18 +7,21 @@ export async function GET() {
       include: {
         weightHistory: {
           orderBy: {
-            recordedAt: 'desc'
-          }
+            recordedAt: "desc",
+          },
         },
         moneyHistory: {
           orderBy: {
-            recordedAt: 'desc'
-          }
-        }
-      }
+            recordedAt: "desc",
+          },
+        },
+      },
     });
     return NextResponse.json(participants);
-  } catch (_error) {
-    return NextResponse.json({ error: 'Erro ao buscar participantes' }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: "Erro ao buscar participantes" },
+      { status: 500 }
+    );
   }
-} 
+}
