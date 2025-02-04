@@ -5,10 +5,14 @@ const prisma = new PrismaClient();
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = Number(params.id);
+    // Extrair o ID da URL
+    const segments = request.nextUrl.pathname.split('/');
+    const idFromUrl = segments[segments.length - 1];
+    const id = Number(idFromUrl);
+
     if (isNaN(id)) {
       return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
     }
@@ -37,8 +41,9 @@ export async function PATCH(
         }
       });
       return NextResponse.json(updatedParticipant);
-    } else if (newWeight !== undefined) {
-      // Atualização do peso perdido
+    }
+
+    if (newWeight !== undefined) {
       const participant = await prisma.participant.findUnique({
         where: { id }
       });
@@ -58,7 +63,9 @@ export async function PATCH(
       });
 
       return NextResponse.json(updatedParticipant);
-    } else if (moneyToAdd !== undefined) {
+    }
+
+    if (moneyToAdd !== undefined) {
       const participant = await prisma.participant.findUnique({
         where: { id }
       });
@@ -85,6 +92,7 @@ export async function PATCH(
       { status: 400 }
     );
   } catch (error) {
+    console.error('Erro na API:', error);
     return NextResponse.json(
       { error: 'Erro ao atualizar participante' },
       { status: 500 }
