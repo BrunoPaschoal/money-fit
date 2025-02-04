@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import ParticipantCard from '@/components/ParticipantCard';
+import ParticipantCardSkeleton from '@/components/ParticipantCardSkeleton';
 
 interface Participant {
   id: number;
@@ -17,14 +18,14 @@ interface Participant {
 
 export default function Home() {
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   useEffect(() => {
-    fetchParticipants();
+    fetchParticipants(true);
   }, []);
 
-  const fetchParticipants = async () => {
-    setIsLoading(true);
+  const fetchParticipants = async (isInitial = false) => {
+    if (isInitial) setIsInitialLoading(true);
     try {
       const response = await fetch('/api/participants');
       const data = await response.json();
@@ -32,7 +33,7 @@ export default function Home() {
     } catch (error) {
       console.error('Erro ao buscar participantes:', error);
     } finally {
-      setIsLoading(false);
+      if (isInitial) setIsInitialLoading(false);
     }
   };
 
@@ -116,7 +117,7 @@ export default function Home() {
               </p>
 
               {/* Líder do Desafio */}
-              {participants.length > 0 && (
+              {!isInitialLoading && participants.length > 0 && (
                 <div className="mt-8 mb-6">
                   {(() => {
                     const participantsWithProgress = participants.filter(p => p.weightGoal > 0 && p.weightHistory.length > 0);
@@ -175,16 +176,28 @@ export default function Home() {
                 </div>
               )}
 
+              {/* Stats */}
               <div className="mt-6 flex justify-center space-x-4">
                 <div className="bg-purple-900/50 backdrop-blur-sm rounded-lg px-6 py-3">
                   <p className="text-purple-200 text-sm font-medium">Participantes</p>
-                  <p className="text-2xl font-bold text-purple-300">{participants.length}</p>
+                  {isInitialLoading ? (
+                    <div className="h-8 bg-purple-800/50 rounded w-8 mx-auto mt-1 animate-pulse" />
+                  ) : (
+                    <p className="text-2xl font-bold text-purple-300">{participants.length}</p>
+                  )}
                 </div>
                 <div className="bg-purple-900/50 backdrop-blur-sm rounded-lg px-6 py-3">
                   <p className="text-purple-200 text-sm font-medium">Prêmio Atual</p>
-                  <p className="text-2xl font-bold text-white">
-                    R$ {participants.reduce((total, p) => total + p.moneyAdded, 0).toFixed(2)}
-                  </p>
+                  {isInitialLoading ? (
+                    <div className="h-8 bg-purple-800/50 rounded w-24 mx-auto mt-1 animate-pulse" />
+                  ) : (
+                    <p className="text-2xl font-bold text-white">
+                      R$ {participants.reduce((total, participant) =>
+                        total + participant.moneyHistory.reduce((subtotal, record) =>
+                          subtotal + record.amount, 0
+                        ), 0).toFixed(2)}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -195,39 +208,46 @@ export default function Home() {
       {/* Conteúdo */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[...participants]
-            .sort((a, b) => {
-              const currentWeightA = a.weightHistory[0]?.weight ?? a.initialWeight;
-              const currentWeightB = b.weightHistory[0]?.weight ?? b.initialWeight;
+          {isInitialLoading ? (
+            // Mostra 4 skeletons durante o carregamento inicial
+            [...Array(4)].map((_, index) => (
+              <ParticipantCardSkeleton key={index} />
+            ))
+          ) : (
+            participants
+              .sort((a, b) => {
+                const currentWeightA = a.weightHistory[0]?.weight ?? a.initialWeight;
+                const currentWeightB = b.weightHistory[0]?.weight ?? b.initialWeight;
 
-              const progressA = a.weightGoal > 0
-                ? Math.min(100, Math.max(0, ((a.initialWeight - currentWeightA) / (a.initialWeight - a.weightGoal)) * 100))
-                : -1;
-              const progressB = b.weightGoal > 0
-                ? Math.min(100, Math.max(0, ((b.initialWeight - currentWeightB) / (b.initialWeight - b.weightGoal)) * 100))
-                : -1;
+                const progressA = a.weightGoal > 0
+                  ? Math.min(100, Math.max(0, ((a.initialWeight - currentWeightA) / (a.initialWeight - a.weightGoal)) * 100))
+                  : -1;
+                const progressB = b.weightGoal > 0
+                  ? Math.min(100, Math.max(0, ((b.initialWeight - currentWeightB) / (b.initialWeight - b.weightGoal)) * 100))
+                  : -1;
 
-              return progressB - progressA;
-            })
-            .map((participant) => (
-              <ParticipantCard
-                key={participant.id}
-                {...participant}
-                onWeightUpdate={handleWeightUpdate}
-                onParticipantEdit={async (id, initialWeight, weightGoal) => {
-                  const response = await fetch(`/api/participants/${id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ initialWeight, weightGoal }),
-                  });
-                  if (response.ok) {
-                    fetchParticipants();
-                  }
-                }}
-                onMoneyAdd={handleMoneyAdd}
-                onReset={handleReset}
-              />
-            ))}
+                return progressB - progressA;
+              })
+              .map((participant) => (
+                <ParticipantCard
+                  key={participant.id}
+                  {...participant}
+                  onWeightUpdate={handleWeightUpdate}
+                  onParticipantEdit={async (id, initialWeight, weightGoal) => {
+                    const response = await fetch(`/api/participants/${id}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ initialWeight, weightGoal }),
+                    });
+                    if (response.ok) {
+                      fetchParticipants();
+                    }
+                  }}
+                  onMoneyAdd={handleMoneyAdd}
+                  onReset={handleReset}
+                />
+              ))
+          )}
         </div>
       </div>
     </div>

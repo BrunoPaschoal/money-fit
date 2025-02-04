@@ -272,7 +272,7 @@ export default function ParticipantInfoModal({ isOpen, onClose, participant }: P
 
                             {activeTab === 'money' && (
                                 <div className="space-y-4">
-                                    <div className="mb-6">
+                                    <div>
                                         <h3 className="text-xl font-bold text-gray-100">Histórico de Punições</h3>
                                         <p className="text-sm text-gray-400 mt-1">
                                             Acompanhe todas as contribuições financeiras realizadas.
@@ -281,7 +281,7 @@ export default function ParticipantInfoModal({ isOpen, onClose, participant }: P
                                     <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
                                         <div className="text-sm text-gray-400">Total Contribuído</div>
                                         <div className="text-2xl font-bold text-emerald-500">
-                                            R$ {participant.moneyAdded.toFixed(2)}
+                                            R$ {participant.moneyHistory.reduce((total, record) => total + record.amount, 0).toFixed(2)}
                                         </div>
                                     </div>
                                     {participant.moneyHistory.length > 0 ? (
